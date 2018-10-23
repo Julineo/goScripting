@@ -7,25 +7,24 @@ import (
 )
 
 func main() {
-	fileInput := "bsd-yo7Fqs.csv"
-	fileExclude := "cnstid.csv"
 
 	// Map for emails to exclude
 	m := map[string]struct{}{}
 
 	// Open files
-	fi, err := os.Open(fileInput)
+	fi, err := os.Open("bsd-yo7Fqs.csv")
 	if err != nil {
 		panic(err)
 	}
+	defer fi.Close()
 
-	fx, err := os.Open(fileExclude)
+	fx, err := os.Open("cnstid.csv")
 	if err != nil {
 		panic(err)
 	}
 	defer fx.Close()
 
-	// Read file into a Variable
+	// Read file into a variable
 	linesEx, err := csv.NewReader(fx).ReadAll()
 	if err != nil {
 		panic(err)
@@ -33,31 +32,53 @@ func main() {
 
 	// Loop through lines & put emails in map
 	for _, line := range linesEx {
-		m[line[8]] = struct{}{}
+		m[line[0]] = struct{}{}
 	}
 
+/*
+	r := csv.NewReader(fi)
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, ok := m[record[4]]
+		if !ok {
+			fmt.Println(record)
+		}
+	}
+*/
 
 	lines, err := csv.NewReader(fi).ReadAll()
 	if err != nil {
 		panic(err)
 	}
 
-	// Create output file
-	fo, err := os.Create("noEISid.csv")
-	if err != nil {
-		panic(err)
-	}
-	defer fo.Close()
+	// Output to Stdout
+	w := csv.NewWriter(os.Stdout)
+	// Windows
+	w.UseCRLF = true
 
-	writer := csv.NewWriter(fo)
-	defer writer.Flush()
+	for _, record := range lines {
+		fmt.Println(record)
+		_, ok := m[record[4]]
+		if ok {
+			continue
+		}
 
-	for _, line := range lines {
-		line = append(line, "\r\n")
-		err := writer.Write(line)
-		if err != nil {
-			fmt.Println(err)
+		if err := w.Write(record); err != nil {
+			fmt.Println("error writing record to csv:", err)
 		}
 	}
 
+	// Write any buffered data to the underlying writer (standard output).
+	w.Flush()
+
+	if err := w.Error(); err != nil {
+		log.Fatal(err)
+	}
 }
