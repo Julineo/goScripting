@@ -1,9 +1,12 @@
+// $ go run main.go > output.csv
+
 package main
 
 import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"log"
 )
 
 func main() {
@@ -35,24 +38,6 @@ func main() {
 		m[line[0]] = struct{}{}
 	}
 
-/*
-	r := csv.NewReader(fi)
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		_, ok := m[record[4]]
-		if !ok {
-			fmt.Println(record)
-		}
-	}
-*/
-
 	lines, err := csv.NewReader(fi).ReadAll()
 	if err != nil {
 		panic(err)
@@ -63,8 +48,8 @@ func main() {
 	// Windows
 	w.UseCRLF = true
 
+	// If email is here pass it
 	for _, record := range lines {
-		fmt.Println(record)
 		_, ok := m[record[4]]
 		if ok {
 			continue
